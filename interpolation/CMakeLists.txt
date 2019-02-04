@@ -20,5 +20,5 @@ install(FILES "${PROJECT_SOURCE_DIR}/../resources/interpolation.jpg" DESTINATION
 target_link_libraries(interpolation ${OpenCV_LIBS})
 
 add_custom_command ( TARGET interpolation POST_BUILD
-    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/../resources/interpolation.jpg"  ${CMAKE_BINARY_DIR}
+    COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/../resources/interpolation.jpg"  ${CMAKE_BINARY_DIR}/interpolation
 )

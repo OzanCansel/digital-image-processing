@@ -1,3 +1,30 @@
+/**
+ *
+ * Copyright (C) 2019
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * @file main.cpp
+ *
+ * @brief The program does resizing by using nearest neighbour, bilinear interpolation algorithms.
+ * These resizing techniques are mentioned in Chapter 2.4.4 - Digital Image Processing (3rd Edition): Rafael C. Gonzalez
+ *
+ * @author Ozan Cansel
+ * Contact: ozancansel@gmail.com
+ *
+ */
+
 #include <iostream>
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/utility.hpp>

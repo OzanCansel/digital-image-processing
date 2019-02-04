@@ -1,8 +1,24 @@
 /**
+ *
+ * Copyright (C) 2019
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
  * @file main.cpp
  *
  * @brief The program does affine transformations such as scaling, rotation, translation, vertical and horizontal shearing
- * Affine transformations which are mentioned at Chapter 2 of Digital Image Processing 3rd Edition are implemented in this program.
+ * Affine transformations which are mentioned at Chapter 2.6.5 - Digital Image Processing (3rd Edition): Rafael C. Gonzalez
  *
  * @author Ozan Cansel
  * Contact: ozancansel@gmail.com
@@ -81,8 +97,8 @@ int main(int argc, char** argv) {
     "{scale             | 1.7,0.7                   | scale ratio}"
     "{rotation          | 45                        | rotation angle}"
     "{translation       | 60,60                     | shift P(x,y)}"
-    "{shearV            | 0.6                       | vertical shear value}"
-    "{shearH            | 0.5                       | horizontal shear value}"
+    "{shearV            | 0.3                       | vertical shear value}"
+    "{shearH            | 0.4                       | horizontal shear value}"
     ;
 
     CommandLineParser cmdParser(argc , argv, keys);
@@ -205,9 +221,9 @@ Mat translate(Mat input, cv::Size translation)
 {
     Mat output = Mat::zeros(input.rows,  input.cols , CV_8U);
 
-	for (auto w = 0; w < input.cols; ++w)
+	for (auto w = 0; w < input.rows; ++w)
 	{
-		for (auto v = 0; v < input.rows; ++v)
+		for (auto v = 0; v < input.cols; ++v)
 		{
 			auto x = v + translation.width;
 			auto y = w + translation.height;
@@ -228,9 +244,9 @@ Mat shearV(Mat input, double sv)
 	//Calculating output frame size
     Mat output = Mat::zeros(input.rows , input.cols + (sv * input.cols), CV_8U);
     
-	for (auto w = 0; w < input.cols; ++w)
+	for (auto w = 0; w < input.rows; ++w)
 	{
-		for (auto v = 0; v < input.rows; ++v)
+		for (auto v = 0; v < input.cols; ++v)
 		{
 			auto x = v + sv * w;
 			auto y = w;
@@ -245,14 +261,14 @@ Mat shearV(Mat input, double sv)
 Mat shearH(Mat input, double sh)
 {
 	//Calculating output frame size
-	Mat output = Mat::zeros(input.rows + (sh * input.rows), input.cols, CV_8U);
+	Mat output = Mat::zeros(input.rows + std::round(sh * input.rows) + 3, input.cols, CV_8U);
 
-	for (auto w = 0; w < input.cols; ++w)
+	for (auto w = 0; w < input.rows; ++w)
 	{
-		for (auto v = 0; v < input.rows; ++v)
+		for (auto v = 0; v < input.cols; ++v)
 		{
 			auto x = v;
-			auto y = sh * v + w;
+			auto y = std::round(sh * v + w);
 
 			output.at<uchar>(y, x) = input.at<uchar>(w, v);
 		}

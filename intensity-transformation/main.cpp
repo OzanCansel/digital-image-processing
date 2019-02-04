@@ -1,29 +1,57 @@
+/**
+ *
+ * Copyright (C) 2019
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ *
+ * @file main.cpp
+ *
+ * @brief The program does intensity transformations such as log transformation, power-law(gamma) transformation
+ * Intensity transformations which are mentioned at Chapter 3.2 - Digital Image Processing (3rd Edition): Rafael C. Gonzalez
+ *
+ * @author Ozan Cansel
+ * Contact: ozancansel@gmail.com
+ * 
+ */
+
 #include <iostream>
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/utility.hpp>
 
 using namespace cv;
 
-//Does power(also known as gamma) transformation, returns the output
+//Does power(also known as gamma) transformation, returns the output,  chapter 3.2.3
 Mat powerTransformation(Mat input, double gamma);
-//Does log transformation, returns the output
+//Does log transformation, returns the output, chapter 3.2.2
 Mat logTransformation(Mat input , double gamma);
 
 int main(int argc, char** argv) {
         const String keys = 
-    "{help h usage ?    |                           | print this message }"
-    "{input             | transformation_darker.jpg | input image}"
-    "{gamma             | 1.15                      | gamma value for power transformation}"
+	"{help h usage ?    || The program does intensity transformations such as log and power transformations.}"
+    "{input             | intensity-transformation-dark.jpg | input image}"
+    "{gamma             | 1.15								| gam|ma value for power transformation}"
     ;
 
     CommandLineParser cmdParser(argc , argv, keys);
-    Mat input;   
 
     if (cmdParser.has("help"))
     {
         cmdParser.printMessage();
         return 0;
     }
+
+	Mat input;
 
     input = imread(cmdParser.get<cv::String>("input").c_str());
     auto gamma = cmdParser.get<double>("gamma");
