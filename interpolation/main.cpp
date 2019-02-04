@@ -35,7 +35,7 @@ auto targetWidth = 480;
 auto targetHeight = 480;
 
 /*
-    The algorithm is implemented according to this post https://www.giassa.net/?page_id=207
+    It was benefitted from https://www.giassa.net/?page_id=207 while the algorithm is implementing.
 */
 Mat nearestNeightbourInterpolation(Mat input)
 {
@@ -59,7 +59,7 @@ Mat nearestNeightbourInterpolation(Mat input)
 }
 
 /*
-    The algorithm is implemented according to this post https://stackoverflow.com/a/32128947
+    It was benefitted from https://stackoverflow.com/a/32128947 while the algorithm is implementing.
 */
 Mat bilinearInterpolation(Mat input)
 {
