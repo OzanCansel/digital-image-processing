@@ -12,8 +12,13 @@ set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
 include(CPack)
 
+install(TARGETS interpolation
+		RUNTIME DESTINATION bin)
+
+install(FILES "${PROJECT_SOURCE_DIR}/../resources/interpolation.jpg" DESTINATION bin)
+
 target_link_libraries(interpolation ${OpenCV_LIBS})
 
-add_custom_command(TARGET interpolation POST_BUILD
+add_custom_command ( TARGET interpolation POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/../resources/interpolation.jpg"  ${CMAKE_BINARY_DIR}
 )
