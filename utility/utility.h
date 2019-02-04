@@ -6,7 +6,7 @@
 namespace dip
 {
 template <class Container>
-void split2(const std::string& str, Container& cont, char delim = ' ')
+void split(const std::string& str, Container& cont, char delim = ' ')
 {
     std::stringstream ss(str);
     std::string token;
