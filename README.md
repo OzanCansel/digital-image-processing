@@ -9,9 +9,6 @@ It is under GNU General Public License.
 - OpenCV 3.x.x or higher
 - CMake
 
-# Compiling
-- Clone the repository
-- Make sure that OpenCV path exists in the environment
-
 # FAQ
 - While configuring with cmake, you can encounter x86 - x64 issues, try to compile with Visual Studio 15 2017 Win64 to overcome that issue
+- While configuring make sure that OpenCV path exists in the environment
