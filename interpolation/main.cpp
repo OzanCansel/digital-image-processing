@@ -35,77 +35,77 @@ using namespace cv;
 /*
 *    It was benefitted from https://www.giassa.net/?page_id=207 while the algorithm is implementing.
 */
-Mat nearestNeightbourInterpolation(Mat input , int targetWidth , int targetHeight);
+Mat nearestNeightbourInterpolation(Mat input, int targetWidth, int targetHeight);
 
-Mat bilinearInterpolation(Mat input , int targetWidth , int targetHeight);
+Mat bilinearInterpolation(Mat input, int targetWidth, int targetHeight);
 
 /*
 *	It was benefitted from https://www.paulinternet.nl/?page=bicubic while the algorithm is implementing.
 */
 Mat bicubicInterpolation(Mat input, int targetWidth, int targetHeight);
 
-int main(int argc , char** argv){
+int main(int argc, char** argv) {
 
-    const String keys = 
-    "{help h usage ?    |                   | print this message }"
-    "{width             | 640               | width of the target image}"
-    "{height            | 480               | height of the target image}"
-    "{path              | interpolation.jpg | path to the used image}"
-    ;
+	const String keys =
+		"{help h usage ?    |                   | print this message }"
+		"{width             | 640               | width of the target image}"
+		"{height            | 480               | height of the target image}"
+		"{path              | interpolation.jpg | path to the used image}"
+		;
 
-    CommandLineParser cmdParser(argc , argv, keys);
-    Mat input;   
+	CommandLineParser cmdParser(argc, argv, keys);
+	Mat input;
 
-    if (cmdParser.has("help"))
-    {
-        cmdParser.printMessage();
-        return 0;
-    }
+	if (cmdParser.has("help"))
+	{
+		cmdParser.printMessage();
+		return 0;
+	}
 
-    if(cmdParser.has("path"))
-    {
-        input = imread(cmdParser.get<cv::String>("path").c_str());
-    }
-    else
-    {
-        input = imread("interpolation.jpg");
-    }
+	if (cmdParser.has("path"))
+	{
+		input = imread(cmdParser.get<cv::String>("path").c_str());
+	}
+	else
+	{
+		input = imread("interpolation.jpg");
+	}
 
 	auto targetWidth = 0;
 	auto targetHeight = 0;
 
 
-    if(cmdParser.has("width"))
-        targetWidth = cmdParser.get<int>("width");
-    if(cmdParser.has("height"))
-        targetHeight = cmdParser.get<int>("height");
+	if (cmdParser.has("width"))
+		targetWidth = cmdParser.get<int>("width");
+	if (cmdParser.has("height"))
+		targetHeight = cmdParser.get<int>("height");
 
-    if ( !input.data )
-    {
-        printf("No input data \n");
-        return -1;
-    }
+	if (!input.data)
+	{
+		printf("No input data \n");
+		return -1;
+	}
 
-    //Change color format to grayscale
-    cvtColor(input , input, COLOR_BGR2GRAY);
+	//Change color format to grayscale
+	cvtColor(input, input, COLOR_BGR2GRAY);
 
-    Mat nearestNeighbourOutput = nearestNeightbourInterpolation(input , targetWidth , targetHeight);
-    Mat bilinearInterpolationOutput = bilinearInterpolation(input , targetWidth , targetHeight);
+	Mat nearestNeighbourOutput = nearestNeightbourInterpolation(input, targetWidth, targetHeight);
+	Mat bilinearInterpolationOutput = bilinearInterpolation(input, targetWidth, targetHeight);
 	Mat bicubicInterpolationOutput = bicubicInterpolation(input, targetWidth, targetHeight);
 
 	auto inputInformationText = std::string("Size(w:") + std::to_string(input.cols) + std::string(" h:") + std::to_string(input.rows) + std::string(")");
-	auto sizeInformationText = std::string("Actual(w:") + std::to_string(input.cols) + std::string(" h:") + std::to_string(input.rows) + 
+	auto sizeInformationText = std::string("Actual(w:") + std::to_string(input.cols) + std::string(" h:") + std::to_string(input.rows) +
 		std::string(") Target(w:") + std::to_string(targetWidth) + std::string(" h:") + std::to_string(targetHeight) + std::string(")");
 
-    imshow(std::string("Input Image") = inputInformationText, input);
-    imshow(std::string("nearest neighbour interpolation") + sizeInformationText , nearestNeighbourOutput);
-    imshow(std::string("bilinear interpolation") + sizeInformationText , bilinearInterpolationOutput);
+	imshow(std::string("Input Image") = inputInformationText, input);
+	imshow(std::string("nearest neighbour interpolation") + sizeInformationText, nearestNeighbourOutput);
+	imshow(std::string("bilinear interpolation") + sizeInformationText, bilinearInterpolationOutput);
 	imshow(std::string("bicubic interpolation") + sizeInformationText, bicubicInterpolationOutput);
-    waitKey(0);
-    return 0;
+	waitKey(0);
+	return 0;
 }
 
-Mat nearestNeightbourInterpolation(Mat input , int targetWidth , int targetHeight)
+Mat nearestNeightbourInterpolation(Mat input, int targetWidth, int targetHeight)
 {
 	Mat output = Mat::zeros(targetHeight, targetWidth, CV_8U);
 
@@ -125,7 +125,7 @@ Mat nearestNeightbourInterpolation(Mat input , int targetWidth , int targetHeigh
 
 
 			//Check boundaries
-			coordinate.x = stayInBoundaries(coordinate.x, Upper(input.cols - 1) , Lower(0));
+			coordinate.x = stayInBoundaries(coordinate.x, Upper(input.cols - 1), Lower(0));
 			coordinate.y = stayInBoundaries(coordinate.y, Upper(input.rows - 1), Lower(0));
 
 			output.at<uchar>(y, x) = input.at<uchar>(coordinate);
@@ -137,7 +137,7 @@ Mat nearestNeightbourInterpolation(Mat input , int targetWidth , int targetHeigh
 
 /*
 *	We are fitting a line between two points in linear interpolation
-*	So the equation for the line is 
+*	So the equation for the line is
 *	f(x) = ax + b
 *	Let's try to solve this equation and write it in dependant to points.
 *	Our x values will be changed between 0 to 1.0.
@@ -198,8 +198,8 @@ Mat bilinearInterpolation(Mat input, int targetWidth, int targetHeight)
 				for (auto xi = 0; xi < 2; ++xi)
 				{
 					Point p = coordinateMatrixOfNeighbours[yi][xi];
-					p.x = stayInBoundaries(p.x , Upper(input.cols - 1) , Lower(0));
-					p.y = stayInBoundaries(p.y , Upper(input.rows - 1) , Lower(0));
+					p.x = stayInBoundaries(p.x, Upper(input.cols - 1), Lower(0));
+					p.y = stayInBoundaries(p.y, Upper(input.rows - 1), Lower(0));
 					coordinateMatrixOfNeighbours[yi][xi] = p;
 				}
 			}
@@ -236,14 +236,14 @@ Mat bilinearInterpolation(Mat input, int targetWidth, int targetHeight)
 	return output;
 }
 
-double cubicInterpolation(double p[4] , double x)
+double cubicInterpolation(double p[4], double x)
 {
 	return p[1] + 0.5 * x*(p[2] - p[0] + x * (2.0*p[0] - 5.0*p[1] + 4.0*p[2] - p[3] + x * (3.0*(p[1] - p[2]) + p[3] - p[0])));
 }
 
 Mat bicubicInterpolation(Mat input, int targetWidth, int targetHeight)
 {
-	Mat output = Mat::zeros(targetHeight , targetWidth , CV_8U);
+	Mat output = Mat::zeros(targetHeight, targetWidth, CV_8U);
 	auto widthRatio = static_cast<double>(targetWidth) / input.cols;
 	auto heightRatio = static_cast<double>(targetHeight) / input.rows;
 
@@ -315,7 +315,7 @@ Mat bicubicInterpolation(Mat input, int targetWidth, int targetHeight)
 			//Do interpolation in horizontal
 			for (auto i = 0; i < 4; ++i)
 			{
-				auto cubicInterpolatedIntensity = cubicInterpolation(intensityMatrixOfNeighbours[i] , xVal);
+				auto cubicInterpolatedIntensity = cubicInterpolation(intensityMatrixOfNeighbours[i], xVal);
 
 				//Check boundaries 0 to 255
 				cubicInterpolatedIntensity = stayInBoundaries(cubicInterpolatedIntensity, Upper(255), Lower(0));
