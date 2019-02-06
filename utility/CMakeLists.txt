@@ -4,7 +4,7 @@ project(utility VERSION 0.1.0)
 include(CTest)
 enable_testing()
 
-add_library(utility utility.h utility.cpp)
+add_library(utility namedtype.h utility.h utility.cpp)
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})

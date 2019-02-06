@@ -28,19 +28,20 @@
 #include <iostream>
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/utility.hpp>
+#include "utility.h"
 
 using namespace cv;
 
 /*
-    It was benefitted from https://www.giassa.net/?page_id=207 while the algorithm is implementing.
+*    It was benefitted from https://www.giassa.net/?page_id=207 while the algorithm is implementing.
 */
 Mat nearestNeightbourInterpolation(Mat input , int targetWidth , int targetHeight);
 
-/*
-    It was benefitted from https://stackoverflow.com/a/32128947 while the algorithm is implementing.
-*/
 Mat bilinearInterpolation(Mat input , int targetWidth , int targetHeight);
 
+/*
+*	It was benefitted from https://www.paulinternet.nl/?page=bicubic while the algorithm is implementing.
+*/
 Mat bicubicInterpolation(Mat input, int targetWidth, int targetHeight);
 
 int main(int argc , char** argv){
@@ -99,6 +100,7 @@ int main(int argc , char** argv){
     imshow(std::string("Input Image") = inputInformationText, input);
     imshow(std::string("nearest neighbour interpolation") + sizeInformationText , nearestNeighbourOutput);
     imshow(std::string("bilinear interpolation") + sizeInformationText , bilinearInterpolationOutput);
+	imshow(std::string("bicubic interpolation") + sizeInformationText, bicubicInterpolationOutput);
     waitKey(0);
     return 0;
 }
@@ -114,18 +116,48 @@ Mat nearestNeightbourInterpolation(Mat input , int targetWidth , int targetHeigh
 	{
 		for (auto y = 0; y < targetHeight; ++y)
 		{
-			auto fromX = static_cast<int>(std::round((x + 1) / xScale));
-			auto fromY = static_cast<int>(std::round((y + 1) / yScale));
 
-			output.at<uchar>(y, x) = input.at<uchar>(std::max(0, fromY - 1), std::max(0, fromX - 1));
+			using namespace dip;
+
+			Point coordinate;
+			coordinate.x = static_cast<int>(std::round((x + 1) / xScale)) - 1;
+			coordinate.y = static_cast<int>(std::round((y + 1) / yScale)) - 1;
+
+
+			//Check boundaries
+			coordinate.x = stayInBoundaries(coordinate.x, Upper(input.cols - 1) , Lower(0));
+			coordinate.y = stayInBoundaries(coordinate.y, Upper(input.rows - 1), Lower(0));
+
+			output.at<uchar>(y, x) = input.at<uchar>(coordinate);
 		}
 	}
 
 	return output;
 }
 
+/*
+*	We are fitting a line between two points in linear interpolation
+*	So the equation for the line is 
+*	f(x) = ax + b
+*	Let's try to solve this equation and write it in dependant to points.
+*	Our x values will be changed between 0 to 1.0.
+*	So let's find f(1) and f(0)
+*	f(1) =  a + b
+*	f(0) =  b
+*	from this two equations, we can state our f(x) by dependent to f(1) and f(0) when 0 <= x <= 1.0
+*   b = f(0)
+*	a = f(1) - f(0)
+*	f(x) = (f(1) - f(0))x + f(0)
+*
+*/
+double linearInterpolation(double p[2], double x)
+{
+	return (p[1] - p[0]) * x + p[0];
+}
+
 Mat bilinearInterpolation(Mat input, int targetWidth, int targetHeight)
 {
+
 	Mat output = Mat::zeros(targetHeight, targetWidth, CV_8U);
 
 	auto xScale = static_cast<float>(targetWidth) / input.cols;
@@ -135,49 +167,169 @@ Mat bilinearInterpolation(Mat input, int targetWidth, int targetHeight)
 	{
 		for (auto y = 0; y < targetHeight; ++y)
 		{
-			auto origX = (x / xScale) + 1;
-			auto origY = (y / yScale) + 1;
-			auto x1 = std::floor(origX);
-			auto x2 = std::ceil(origX);
-			auto y1 = std::floor(origY);
-			auto y2 = std::ceil(origY);
 
-			auto x1Idx = std::max(0, static_cast<int>(x1) - 2);
-			auto x2Idx = std::max(0, static_cast<int>(x2) - 2);
-			auto y1Idx = std::max(0, static_cast<int>(y1) - 2);
-			auto y2Idx = std::max(0, static_cast<int>(y2) - 2);
+			using namespace dip;
 
+			auto origX = (x / xScale);
+			auto origY = (y / yScale);
 
-			auto r1 = 0;
-			auto r2 = 0;
+			//Matrix of 4 nearest neighbours pixel values
+			cv::Point coordinateMatrixOfNeighbours[2][2];
 
-			if (x1 == x2)
+			cv::Point p00;
+			p00.x = std::floor(origX);
+			p00.y = std::floor(origY);
+
+			//Assign coordinates
+			for (auto yi = 0; yi < 2; ++yi)
 			{
-				r1 = input.at<uchar>(y1Idx, x1Idx);
-				r2 = input.at<uchar>(y2Idx, x1Idx);
-			}
-			else
-			{
-				r1 = std::round(input.at<uchar>(y1Idx, x1Idx) + ((origX - x1) / 1.0) * (input.at<uchar>(y1Idx, x2Idx) - input.at<uchar>(y1Idx, x1Idx)));
-				r2 = std::round(input.at<uchar>(y2Idx, x1Idx) + ((origX - x1) / 1.0) * (input.at<uchar>(y2Idx, x2Idx) - input.at<uchar>(y2Idx, x1Idx)));
+				for (auto xi = 0; xi < 2; ++xi)
+				{
+					Point coordinate;
+					coordinate.x = p00.x + xi;
+					coordinate.y = p00.y + yi;
+					coordinateMatrixOfNeighbours[yi][xi] = coordinate;
+				}
 			}
 
-			auto P = 0;
-			if (r1 == r2)
-				P = r1;
-			else
-				P = std::max(.0f, std::min(255.0f, std::round((r2 + (origY - y2) / (y2 - y1) * (r1 - r2)))));
+			//Check boundaries
+			for (auto yi = 0; yi < 2; ++yi)
+			{
+				for (auto xi = 0; xi < 2; ++xi)
+				{
+					Point p = coordinateMatrixOfNeighbours[yi][xi];
+					p.x = stayInBoundaries(p.x , Upper(input.cols - 1) , Lower(0));
+					p.y = stayInBoundaries(p.y , Upper(input.rows - 1) , Lower(0));
+					coordinateMatrixOfNeighbours[yi][xi] = p;
+				}
+			}
 
-			output.at<uchar>(y, x) = P;
+			double intensityMatrixOfNeighbours[2][2];
+
+			for (auto yi = 0; yi < 2; ++yi)
+			{
+				for (auto xi = 0; xi < 2; ++xi)
+				{
+					intensityMatrixOfNeighbours[yi][xi] = input.at<uchar>(coordinateMatrixOfNeighbours[yi][xi]);
+				}
+			}
+
+			auto xVal = origX - std::floor(origX);
+			auto yVal = origY - std::floor(origY);
+
+			double horizontallyInterpolatedIntensityMatrix[2];
+
+			//Do horizontal interpolation
+			for (auto i = 0; i < 2; ++i)
+			{
+				horizontallyInterpolatedIntensityMatrix[i] = linearInterpolation(intensityMatrixOfNeighbours[i], xVal);
+			}
+
+			//Do vertical interpolation
+			auto bothHorizontalAndVerticalInterpolatedIntensityValue = std::round(linearInterpolation(horizontallyInterpolatedIntensityMatrix, yVal));
+			bothHorizontalAndVerticalInterpolatedIntensityValue = stayInBoundaries(bothHorizontalAndVerticalInterpolatedIntensityValue, Upper(255), Lower(0));
+
+			output.at<uchar>(y, x) = bothHorizontalAndVerticalInterpolatedIntensityValue;
 		}
 	}
 
 	return output;
 }
 
+double cubicInterpolation(double p[4] , double x)
+{
+	return p[1] + 0.5 * x*(p[2] - p[0] + x * (2.0*p[0] - 5.0*p[1] + 4.0*p[2] - p[3] + x * (3.0*(p[1] - p[2]) + p[3] - p[0])));
+}
+
 Mat bicubicInterpolation(Mat input, int targetWidth, int targetHeight)
 {
-	Mat output;
+	Mat output = Mat::zeros(targetHeight , targetWidth , CV_8U);
+	auto widthRatio = static_cast<double>(targetWidth) / input.cols;
+	auto heightRatio = static_cast<double>(targetHeight) / input.rows;
+
+	using namespace dip;
+
+	auto upperWidthBoundary = input.cols - 1;
+	auto upperHeightBoundary = input.rows - 1;
+
+	for (auto y = 0; y < output.rows; ++y)
+	{
+		for (auto x = 0; x < output.cols; ++x)
+		{
+
+			//Conceptually, we are looking for center point of the above points
+			auto centerX = x / widthRatio;
+			auto centerY = y / heightRatio;
+
+			//Matrix of 16 nearest neighbours pixel values
+			cv::Point coordinateMatrixOfNeighbours[4][4];
+
+			//Calculate coordinate of p00
+			cv::Point p00;
+			p00.x = std::floor(centerX) - 1;
+			p00.y = std::floor(centerY) - 1;
+
+			//Calculate all the pixels p00 to p33
+			for (auto yi = 0; yi < 4; ++yi)
+			{
+				for (auto xi = 0; xi < 4; ++xi)
+				{
+					Point p;
+					p.x = p00.x + xi;
+					p.y = p00.y + yi;
+					coordinateMatrixOfNeighbours[yi][xi] = p;
+				}
+			}
+
+			//Make sure that all the pixel coordinates in boundaries of the input image
+			for (auto yi = 0; yi < 4; ++yi)
+			{
+				for (auto xi = 0; xi < 4; ++xi)
+				{
+					Point p = coordinateMatrixOfNeighbours[yi][xi];
+
+					p.x = stayInBoundaries(p.x, Upper(input.cols - 1), Lower(0));
+					p.y = stayInBoundaries(p.y, Upper(input.rows - 1), Lower(0));
+
+					coordinateMatrixOfNeighbours[yi][xi] = p;
+				}
+			}
+
+			double intensityMatrixOfNeighbours[4][4];
+
+			//Filling intensity matrix according to coordinate matrix
+			for (auto yi = 0; yi < 4; ++yi)
+			{
+				for (auto xi = 0; xi < 4; ++xi)
+				{
+					auto coordinate = coordinateMatrixOfNeighbours[yi][xi];
+					intensityMatrixOfNeighbours[yi][xi] = input.at<uchar>(coordinate);
+				}
+			}
+
+			double horizontalInterpolationResultMatrix[4];
+
+			auto yVal = centerY - std::floor(centerY);
+			auto xVal = centerX - std::floor(centerX);
+
+			//Do interpolation in horizontal
+			for (auto i = 0; i < 4; ++i)
+			{
+				auto cubicInterpolatedIntensity = cubicInterpolation(intensityMatrixOfNeighbours[i] , xVal);
+
+				//Check boundaries 0 to 255
+				cubicInterpolatedIntensity = stayInBoundaries(cubicInterpolatedIntensity, Upper(255), Lower(0));
+				horizontalInterpolationResultMatrix[i] = cubicInterpolatedIntensity;
+			}
+
+			//As far, we obtained four interpolated points
+			//So now lets interpolate four points to one point
+			auto bothHorizontalAndVerticalInterpolatedIntensity = std::round(cubicInterpolation(horizontalInterpolationResultMatrix, yVal));
+			bothHorizontalAndVerticalInterpolatedIntensity = stayInBoundaries(bothHorizontalAndVerticalInterpolatedIntensity, Upper(255), Lower(0));
+
+			output.at<uchar>(y, x) = bothHorizontalAndVerticalInterpolatedIntensity;
+		}
+	}
 
 	return output;
 }
