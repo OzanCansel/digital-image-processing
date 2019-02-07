@@ -21,5 +21,6 @@ install(FILES "${PROJECT_SOURCE_DIR}/../resources/intensity-transformation-dark.
 
 add_custom_command(TARGET intensity-transformation POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/../resources/intensity-transformation-dark.jpg" "${CMAKE_BINARY_DIR}/intensity-transformation"
-)
+	COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/../resources/contrast-stretching.jpg" "${CMAKE_BINARY_DIR}/intensity-transformation"
+) 
  

@@ -35,12 +35,15 @@ using namespace cv;
 Mat powerTransformation(Mat input, double gamma);
 //Does log transformation, returns the output, chapter 3.2.2
 Mat logTransformation(Mat input , double gamma);
+//Contrast strecthing algorithm 3.2.4
+Mat contrastStretching(Mat input);
 
 int main(int argc, char** argv) {
         const String keys = 
 	"{help h usage ?    || The program does intensity transformations such as log and power transformations.}"
-    "{input             | intensity-transformation-dark.jpg | input image}"
-    "{gamma             | 1.15								| gam|ma value for power transformation}"
+    "{input             | intensity-transformation-dark.jpg | power and log transforming image}"
+	"{input2            | contrast-stretching.jpg           | power and log transforming image}"
+	"{gamma             | 1.15								| gam|ma value for power transformation}"
     ;
 
     CommandLineParser cmdParser(argc , argv, keys);
@@ -51,9 +54,10 @@ int main(int argc, char** argv) {
         return 0;
     }
 
-	Mat input;
+	Mat input , input2;
 
     input = imread(cmdParser.get<cv::String>("input").c_str());
+	input2 = imread(cmdParser.get<cv::String>("input2").c_str());
     auto gamma = cmdParser.get<double>("gamma");
 
     if ( !input.data )
@@ -63,12 +67,17 @@ int main(int argc, char** argv) {
     }
 
     cvtColor(input , input , COLOR_BGR2GRAY);
+	cvtColor(input2, input2, COLOR_BGR2GRAY);
     auto powerTransformedOutput = powerTransformation(input , gamma);
     auto logTransformedOutput = logTransformation(input , gamma);
+	auto contrastStrecthedOutput = contrastStretching(input2);
 
-    imshow("Original" , input);
+    imshow("input1" , input);
     imshow((std::string("Power Transformation - Gamma ") + std::to_string(gamma)).c_str() , powerTransformedOutput);
     imshow("Log Transformation" , logTransformedOutput);
+	imshow("input2", input2);
+	imshow("Contrast Streching", contrastStrecthedOutput);
+
     waitKey(0);
 
     return 0;
@@ -127,4 +136,41 @@ Mat logTransformation(Mat input, double gamma)
     transformed.convertTo(result , CV_8U);
 
     return result;
+}
+
+Mat contrastStretching(Mat input)
+{
+	Mat result = Mat::zeros(input.rows, input.cols, CV_8U);
+
+	auto rMin = 255;
+	auto rMax = 0;
+	
+	//Find min and max values in the image
+	for (auto y = 0; y < input.rows; ++y)
+	{
+		for (auto x = 0; x < input.cols; ++x)
+		{
+			auto current = input.at<uchar>(y, x);
+
+			if (current < rMin)
+				rMin = current;
+
+			if (current > rMax)
+				rMax = current;
+		}
+	}
+
+	auto R = static_cast<double>(rMax - rMin);
+
+	//Strecth contrast between rMin and rMax to 0 and 255
+	for (auto y = 0; y < input.rows; ++y)
+	{
+		for (auto x = 0; x < input.cols; ++x)
+		{
+			auto p = input.at<uchar>(y, x);
+			result.at<uchar>(y , x) = p = std::round(((p - rMin) / R) * 255.0);
+		}
+	}
+
+	return result;
 }
