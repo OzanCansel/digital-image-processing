@@ -2,6 +2,7 @@
 #define _UTILITY_H
 
 #include <string>
+#include <opencv2/opencv.hpp>
 #include "NamedType.h"
 
 namespace dip
@@ -45,6 +46,8 @@ T stayInBoundaries(T val, NamedType<U , UpperBoundaryParameter> upper, NamedType
 
 	return val;
 }
+
+cv::Mat drawHistogram(double* values,  int range);
 
 }
 

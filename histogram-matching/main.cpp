@@ -17,8 +17,8 @@
  *
  * @file main.cpp
  *
- * @brief Does histogram equalization
- * Histogram equalization which are mentioned at Chapter 3.3 - Digital Image Processing (3rd Edition): Rafael C. Gonzalez
+ * @brief Does histogram matching
+ * Histogram matching which is mentioned at Chapter 3.3.2 - Digital Image Processing (3rd Edition): Rafael C. Gonzalez
  *
  * @author Ozan Cansel
  * Contact: ozancansel@gmail.com
@@ -38,14 +38,12 @@ using namespace cv;
 //Fills the array with zeros
 void fillZero(double* arr, int size);
 
-/* Chapter 3.3 is implemented. It performs 3.3-8. equation on the image.
+/* Chapter 3.3.2 is implemented.
 * It is also useful to look at 
-* https://www.tutorialspoint.com/dip/introduction_to_probability.htm and https://www.tutorialspoint.com/dip/histogram_equalization.htm
+* https://stackoverflow.com/a/33047048
 * pages for simpler explanation.
 */
-Mat equalizeHistogram(Mat input);
-
-void fillZero(double* arr, int size);
+Mat histogramMatching(Mat input, Mat templateImg);
 
 double* calculateHistogram(Mat input);
 
@@ -59,8 +57,9 @@ double* calculateCdf(double* pdf);
 
 int main(int argc, char** argv) {
         const String keys = 
-	"{help h usage ?    || The program does histogram equalization on the image.}"
-    "{input             | histogram-equalization.png | input image}"
+	"{help h usage ?    || The program does histogram matching.}"
+    "{input             | histogram-matching-input.jpg | input image}"
+	"{template          | histogram-matching-template.jpg | template image}"
     ;
 
     CommandLineParser cmdParser(argc , argv, keys);
@@ -71,9 +70,10 @@ int main(int argc, char** argv) {
         return 0;
     }
 
-	Mat input;
+	Mat input , templateImg;
 
     input = imread(cmdParser.get<cv::String>("input").c_str());
+	templateImg = imread(cmdParser.get<cv::String>("template").c_str());
 
     if ( !input.data )
     {
@@ -81,13 +81,20 @@ int main(int argc, char** argv) {
         return -1;
     }
 
-    cvtColor(input , input , COLOR_BGR2GRAY);
+	if (!templateImg.data)
+	{
+		std::cout << "No template data" << std::endl;
+		return -1;
+	}
 
-	//Performs histogram equalization
-	auto histogramEqualizedImage = equalizeHistogram(input);
+    cvtColor(input , input , COLOR_BGR2GRAY);
+	cvtColor(templateImg, templateImg, COLOR_BGR2GRAY);
+
+	auto histogramMatchedImg = histogramMatching(input , templateImg);
 
     imshow("input" , input);
-	imshow("Histogram equalized output", histogramEqualizedImage);
+	imshow("template img", templateImg);
+	imshow("Histogram matched output", histogramMatchedImg);
 
     waitKey(0);
 
@@ -118,7 +125,7 @@ double* calculateHistogram(Mat input)
 	return inputHistogram;
 }
 
-double* calculatePdf(double* histogram, int totalPixelSize)
+double* calculatePdf(double* histogram , int totalPixelSize)
 {
 	double* pdf = new double[L];
 	fillZero(pdf, L);
@@ -145,36 +152,61 @@ double* calculateCdf(double* pdf)
 	return cdf;
 }
 
-Mat equalizeHistogram(Mat input)
+Mat histogramMatching(Mat input, Mat templateImg)
 {
+	Mat output(input.rows, input.cols, CV_8U);
 
 	//Firstly calculate histogram
 	double* inputHistogram = calculateHistogram(input);
-	//Secondly extract probability density function(PDF) from the histogram
-	double* inputPdf = calculatePdf(inputHistogram, input.rows * input.cols);
-	//Thirdly cumulative probability function(CDF) from PDF
+	double* templateHistogram = calculateHistogram(templateImg);
+
+	//Secondly calculate PDF
+	double* inputPdf = calculatePdf(inputHistogram , input.rows * input.cols);
+	double* templatePdf = calculatePdf(templateHistogram, templateImg.rows * templateImg.cols);
+
+	//Thirdly calculate CDF
 	double* inputCdf = calculateCdf(inputPdf);
+	double* templateCdf = calculateCdf(templatePdf);
 
-	Mat output(input.rows, input.cols, CV_8U);
 
-	//As last, map old image intensity values
+	double mapping[L];
+
+	//Calculate histogram specification function
+	for (auto i = 0; i < L; ++i)
+	{
+		auto hIntensity = (L - 1) * inputCdf[i];
+		auto correspondingIdx = 0;
+		auto minDifference = 256.0;
+		for (auto j = 0; j < L; ++j)
+		{
+			auto currentIntensity = (L - 1) * templateCdf[j];
+			auto difference = std::abs(currentIntensity - hIntensity);
+			if (difference < minDifference)
+			{
+				correspondingIdx = j;
+				minDifference = difference;
+			}
+		}
+
+		mapping[i] = correspondingIdx;
+	}
+
+	//Apply histogram matching function to input
 	for (auto y = 0; y < input.rows; ++y)
 	{
 		for (auto x = 0; x < input.cols; ++x)
 		{
-			auto oldIntensity = input.at<uchar>(y, x);
-
-			//Full implementation of Equation 3.3-8
-			output.at<uchar>(y, x) = std::round((L - 1) * inputCdf[oldIntensity]);
+			output.at<uchar>(y, x) = mapping[input.at<uchar>(y , x)];
 		}
 	}
 
-	//Calculate output histogram and pdf
 	double* outputHistogram = calculateHistogram(output);
 	double* outputPdf = calculatePdf(outputHistogram, output.rows * output.cols);
 
-	imshow("input histogram", dip::drawHistogram(inputPdf, L));
-	imshow("output histogram", dip::drawHistogram(outputPdf, L));
+	imshow("Input Histogram", dip::drawHistogram(inputPdf, L));
+	imshow("Template Histogram", dip::drawHistogram(templatePdf, L));
+	imshow("Output Histogram", dip::drawHistogram(outputPdf, L));
+
 
 	return output;
 }

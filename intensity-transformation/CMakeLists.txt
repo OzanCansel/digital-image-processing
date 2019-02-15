@@ -17,7 +17,7 @@ target_link_libraries(intensity-transformation ${OpenCV_LIBS})
 install(TARGETS intensity-transformation
 		RUNTIME DESTINATION bin)
 
-install(FILES "${PROJECT_SOURCE_DIR}/../resources/intensity-transformation-dark.jpg" DESTINATION bin)
+install(FILES "${PROJECT_SOURCE_DIR}/../resources/intensity-transformation-dark.jpg" "${PROJECT_SOURCE_DIR}/../resources/contrast-stretching.jpg" DESTINATION bin)
 
 add_custom_command(TARGET intensity-transformation POST_BUILD
     COMMAND ${CMAKE_COMMAND} -E copy_if_different "${PROJECT_SOURCE_DIR}/../resources/intensity-transformation-dark.jpg" "${CMAKE_BINARY_DIR}/intensity-transformation"

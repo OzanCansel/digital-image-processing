@@ -6,13 +6,15 @@ find_package(OpenCV REQUIRED)
 include(CTest)
 enable_testing()
 
+include_directories("../utility")
+
 add_executable(histogram-equalization main.cpp)
 
 set(CPACK_PROJECT_NAME ${PROJECT_NAME})
 set(CPACK_PROJECT_VERSION ${PROJECT_VERSION})
 include(CPack)
 
-target_link_libraries(histogram-equalization ${OpenCV_LIBS})
+target_link_libraries(histogram-equalization ${OpenCV_LIBS} utility)
 
 install(TARGETS histogram-equalization
 		RUNTIME DESTINATION bin)
