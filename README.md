@@ -1,3 +1,4 @@
+[![Build Status](https://travis-ci.org/OzanCansel/digital-image-processing.svg?branch=master)](https://travis-ci.org/OzanCansel/digital-image-processing)
 # digital-image-processing
 
 This project aims to implement the algorithms which are encountered in Digital Image Processing (3rd Edition): Rafael C. Gonzalez.
