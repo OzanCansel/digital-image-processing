@@ -6,7 +6,7 @@ find_package(OpenCV REQUIRED)
 include(CTest)
 enable_testing()
 
-add_library(utility namedtype.h utility.h utility.cpp)
+add_library(utility NamedType.h utility.h utility.cpp)
 
 target_link_libraries(utility ${OpenCV_LIBS})
 
