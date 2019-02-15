@@ -26,6 +26,7 @@
  */
 
 #include <iostream>
+#include <math.h>
 #include <opencv2/opencv.hpp>
 #include <opencv2/core/utility.hpp>
 
