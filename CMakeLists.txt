@@ -3,6 +3,7 @@ project(digital-image-processing)
 
 set(CMAKE_CXX_STANDARD 14)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CXX_EXTENSIONS OFF)
 
 add_subdirectory(interpolation)
 add_subdirectory(intensity-transformation)
