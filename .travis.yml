@@ -13,9 +13,6 @@ matrix:
 
 language:
   - cpp
-
-compiler:
-  - gcc
          
 before_install:
   - sudo add-apt-repository ppa:lkoppel/opencv -y
