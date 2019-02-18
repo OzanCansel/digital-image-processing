@@ -10,20 +10,14 @@ matrix:
             - g++-6
       env:
         - MATRIX_EVAL="CC=gcc-6 && CXX=g++-6
-
-language:
-  - cpp
-
-compiler:
-  - gcc
          
 before_install:
+  - eval "${MATRIX_EVAL}"
   - sudo add-apt-repository ppa:lkoppel/opencv -y
   - sudo apt-get update
 
 install:
 
-  - sudo apt-get install g++-5 -y
   - sudo apt-get install -y cmake git libopencv-dev
 
 script: bash build.sh
