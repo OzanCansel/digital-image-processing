@@ -34,6 +34,7 @@
 using namespace cv;
 
 //Equation : 3.3-24
+//https://www.youtube.com/watch?v=gFELyrIx010 is simply explaining how the operations are performed.
 Mat correlate(Mat f , Mat w);
 Mat convolute(Mat f, Mat w);
 
