@@ -199,7 +199,7 @@ double calculateVarianceSquare(double* p, double m)
 	{
 		auto ri = i;
 
-		varianceSquare += std::powf(ri - m, 2) * p[ri];
+		varianceSquare += std::pow(ri - m, 2) * p[ri];
 	}
 
 	return varianceSquare;
@@ -234,7 +234,7 @@ double calculateSampleVarianceSquare(Mat input, double m)
 	{
 		for (auto y = 0; y <= N - 1; ++y)
 		{
-			varianceSquare += std::powf(static_cast<double>(input.at<uchar>(y, x)) - m , 2);
+			varianceSquare += std::pow(static_cast<double>(input.at<uchar>(y, x)) - m , 2);
 		}
 	}
 
