@@ -15,6 +15,7 @@ language:
   - cpp
          
 before_install:
+  - eval "${MATRIX_EVAL}"
   - sudo add-apt-repository ppa:lkoppel/opencv -y
   - sudo apt-get update
 
