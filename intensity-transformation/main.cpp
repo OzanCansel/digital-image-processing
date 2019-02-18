@@ -137,8 +137,8 @@ Mat logTransformation(Mat input, double gamma)
         for(auto x = 0; x < normalized.cols; ++x)
         {
             auto val = normalized.at<double>(y , x);
-            auto logTransformationPixelResult = std::logf(val + 1);
-            transformed.at<double>(y , x) = c *  (std::logf(normalized.at<double>(y , x) + 1.0));
+            auto logTransformationPixelResult = std::log(val + 1);
+            transformed.at<double>(y , x) = c *  (std::log(normalized.at<double>(y , x) + 1.0));
         }
     }
 
