@@ -44,6 +44,11 @@ Mat applyBoxMask(Mat input);
 Mat applyWeightedAverageMask(Mat input);
 
 /*
+* Median Mask in 3.5.2
+*/
+Mat applyMedian(Mat f, int size);
+
+/*
 * Equation : 3.5-1
 */
 int applyMask(Mat input, Mat mask);
@@ -52,12 +57,13 @@ int applyMask(Mat input, Mat mask);
 void printMat(Mat input);
 
 //Iterates all points of f(x,y) and applies the w(x , y)
-Mat iterateMask(Mat f, Mat w);
+Mat iterateLinearMask(Mat f, Mat w);
 
 int main(int argc, char** argv) {
         const String keys = 
 	"{help h usage ?    || The program apply smoothing spatial filters to the image.}"
     "{input             | smoothing-spatial-filter.jpg | an image which the filters will be applied}"
+	"{medianSize        | 9 | size of median mask}"
     ;
 
     CommandLineParser cmdParser(argc , argv, keys);
@@ -78,17 +84,22 @@ int main(int argc, char** argv) {
         return -1;
     }
 
+	auto medianSize = cmdParser.get<int>("medianSize");
+
     cvtColor(input , input , COLOR_BGR2GRAY);
 	
 	std::cout << "Box mask is being applied..." << std::endl;
 	auto boxMaskApplied = applyBoxMask(input);
 	std::cout << "-----------------------------------------" << std::endl;
 	std::cout << "Weighted average mask is being applied..." << std::endl;
-	auto weightedAverageApplied = applyWeightedAverageMask(input);
+	auto weightedAverageMaskApplied = applyWeightedAverageMask(input);
+	std::cout << "Median mask is being applied..." << std::endl;
+	auto medianMaskApplied = applyMedian(input, medianSize);
 
     imshow("input" , input);
 	imshow("Box Mask Applied", boxMaskApplied);
-	imshow("Weighted Average Applied", weightedAverageApplied);
+	imshow("Weighted Average Mask Applied", weightedAverageMaskApplied);
+	imshow("Median Mask Applied", medianMaskApplied);
 
     waitKey(0);
 
@@ -106,7 +117,7 @@ Mat applyBoxMask(Mat input)
 	std::cout << "Box Mask => " << std::endl;
 	printMat(boxMask);
 
-	return iterateMask(input, boxMask);
+	return iterateLinearMask(input, boxMask);
 }
 
 Mat applyWeightedAverageMask(Mat input)
@@ -119,7 +130,7 @@ Mat applyWeightedAverageMask(Mat input)
 	std::cout << "Weighted Average Mask => " << std::endl;
 	printMat(weightedAverageMask);
 
-	return iterateMask(input, weightedAverageMask);
+	return iterateLinearMask(input, weightedAverageMask);
 }
 
 int applyMask(Mat f, Mat w)
@@ -138,7 +149,55 @@ int applyMask(Mat f, Mat w)
 	return result;
 }
 
-Mat iterateMask(Mat f, Mat w)
+Mat applyMedian(Mat f , int size)
+{
+	auto m = size;
+	auto n = size;
+	auto a = (m - 1) / 2;
+	auto b = (n - 1) / 2;
+	auto padSize = size - 1;
+	Mat fPadded = Mat::zeros(f.rows + 2 * padSize, f.cols + 2 * padSize, CV_8U);
+	Mat g = Mat::zeros(f.rows + 2 * padSize, f.cols + 2 * padSize, CV_8U);
+
+	//Pad is adding
+	auto roi = fPadded(Rect(size - 1, size - 1, f.rows, f.cols));
+	f.copyTo(roi);
+
+	//Start with some margin, because we padded the Mat
+	//Iterate all the points
+	for (auto y = padSize - 1; y < fPadded.rows - padSize + 1; ++y)
+	{
+		for (auto x = padSize - 1; x < fPadded.cols - padSize + 1; ++x)
+		{
+			//Get the Mat which consist of neighbours of the point
+			Mat neighbourhood = fPadded(Rect(x - a, y - b, size, size));
+
+			std::vector<int> values;
+
+			for (auto nX = 0; nX < neighbourhood.cols; ++nX)
+			{
+				for (auto nY = 0; nY < neighbourhood.rows; ++nY)
+				{
+					values.push_back(neighbourhood.at<uchar>(nY, nX));
+				}
+			}
+
+			//Sort values
+			std::sort(values.begin(), values.end(), std::less<int>());
+
+			//Find meadian (value at the center of the vector)
+			auto median = values.at(values.size() / 2 + 1);
+
+			//Apply the filter
+			g.at<uchar>(y, x) = static_cast<uchar>(median);
+		}
+	}
+
+	//Return unpadded Mat
+	return g(Rect(padSize, padSize, f.cols, f.rows));
+}
+
+Mat iterateLinearMask(Mat f, Mat w)
 {
 	auto m = w.cols;
 	auto n = w.rows;
