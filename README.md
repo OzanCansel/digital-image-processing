@@ -9,6 +9,7 @@ It is under GNU General Public License.
 - Visual Studio 2017 Community Version
 - OpenCV 3.x.x or higher
 - CMake
+- A compiler which supports C++14 and higher
 
 # FAQ
 - While configuring with cmake, you can encounter x86 - x64 issues, try to compile with Visual Studio 15 2017 Win64 to overcome that issue
